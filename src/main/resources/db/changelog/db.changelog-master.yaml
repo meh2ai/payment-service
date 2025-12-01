@@ -1,0 +1,8 @@
+databaseChangeLog:
+  - include:
+      file: changes/0001-create-tables.sql
+      relativeToChangelogFile: true
+  - include:
+      file: changes/0002-test-data.sql
+      relativeToChangelogFile: true
+      context: local,test
