@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FindBugsFilter>
+    <Match>
+        <Package name="com.payment.api"/>
+    </Match>
+    <Match>
+        <Package name="com.payment.api.model"/>
+    </Match>
+    <Match>
+        <Class name="~.*__spock_feature_.*" />
+    </Match>
+    <Match>
+        <Class name="~.*_pollForRecord_closure.*" />
+    </Match>
+</FindBugsFilter>
