@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
+import java.util.function.Function;
 
 @Service
 @RequiredArgsConstructor
@@ -39,11 +40,20 @@ public class PaymentProcessor {
         paymentRepository.save(payment);
 
         try {
-            Account sender = accountRepository.findById(payment.getSenderAccountId())
-                .orElseThrow(() -> PaymentException.senderAccountNotFound(payment.getSenderAccountId()));
+            UUID senderId = payment.getSenderAccountId();
+            UUID receiverId = payment.getReceiverAccountId();
 
-            Account receiver = accountRepository.findById(payment.getReceiverAccountId())
-                .orElseThrow(() -> PaymentException.receiverAccountNotFound(payment.getReceiverAccountId()));
+            Account sender;
+            Account receiver;
+
+            // Lock ordering to prevent deadlocks
+            if (senderId.compareTo(receiverId) < 0) {
+                sender = getAccountWithLock(senderId, PaymentException::senderAccountNotFound);
+                receiver = getAccountWithLock(receiverId, PaymentException::receiverAccountNotFound);
+            } else {
+                receiver = getAccountWithLock(receiverId, PaymentException::receiverAccountNotFound);
+                sender = getAccountWithLock(senderId, PaymentException::senderAccountNotFound);
+            }
 
             sender.debit(payment.getAmount());
             receiver.credit(payment.getAmount());
@@ -80,5 +90,9 @@ public class PaymentProcessor {
                 e.getMessage()
             ));
         }
+    }
+
+    private Account getAccountWithLock(UUID id, Function<UUID, RuntimeException> exceptionSupplier) {
+        return accountRepository.findByIdWithLock(id).orElseThrow(() -> exceptionSupplier.apply(id));
     }
 }

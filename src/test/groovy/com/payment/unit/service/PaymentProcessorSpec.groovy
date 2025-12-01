@@ -39,8 +39,8 @@ class PaymentProcessorSpec extends Specification {
 
         then:
         1 * paymentRepository.findById(payment.id) >> Optional.of(payment)
-        1 * accountRepository.findById(senderAccountId) >> Optional.of(sender)
-        1 * accountRepository.findById(receiverAccountId) >> Optional.of(receiver)
+        1 * accountRepository.findByIdWithLock(senderAccountId) >> Optional.of(sender)
+        1 * accountRepository.findByIdWithLock(receiverAccountId) >> Optional.of(receiver)
         2 * paymentRepository.save(_ as Payment)
         1 * accountRepository.save({ it.balance == new BigDecimal("400.00") })
         1 * accountRepository.save({ it.balance == new BigDecimal("300.00") })
@@ -60,8 +60,8 @@ class PaymentProcessorSpec extends Specification {
 
         then:
         1 * paymentRepository.findById(payment.id) >> Optional.of(payment)
-        1 * accountRepository.findById(senderAccountId) >> Optional.of(sender)
-        1 * accountRepository.findById(receiverAccountId) >> Optional.of(receiver)
+        1 * accountRepository.findByIdWithLock(senderAccountId) >> Optional.of(sender)
+        1 * accountRepository.findByIdWithLock(receiverAccountId) >> Optional.of(receiver)
         2 * paymentRepository.save(_ as Payment)
         1 * eventPublisher.publishEvent({ PaymentCompletedEvent e ->
             e.status() == PaymentStatus.FAILED &&
@@ -78,7 +78,8 @@ class PaymentProcessorSpec extends Specification {
 
         then:
         1 * paymentRepository.findById(payment.id) >> Optional.of(payment)
-        1 * accountRepository.findById(senderAccountId) >> Optional.empty()
+        _ * accountRepository.findByIdWithLock(receiverAccountId) >> Optional.of(new Account(receiverAccountId, BigDecimal.TEN, "EUR"))
+        1 * accountRepository.findByIdWithLock(senderAccountId) >> Optional.empty()
         2 * paymentRepository.save(_ as Payment)
         1 * eventPublisher.publishEvent({ PaymentCompletedEvent e ->
             e.status() == PaymentStatus.FAILED &&
@@ -96,8 +97,8 @@ class PaymentProcessorSpec extends Specification {
 
         then:
         1 * paymentRepository.findById(payment.id) >> Optional.of(payment)
-        1 * accountRepository.findById(senderAccountId) >> Optional.of(sender)
-        1 * accountRepository.findById(receiverAccountId) >> Optional.empty()
+        _ * accountRepository.findByIdWithLock(senderAccountId) >> Optional.of(sender)
+        1 * accountRepository.findByIdWithLock(receiverAccountId) >> Optional.empty()
         2 * paymentRepository.save(_ as Payment)
         1 * eventPublisher.publishEvent({ PaymentCompletedEvent e ->
             e.status() == PaymentStatus.FAILED &&
