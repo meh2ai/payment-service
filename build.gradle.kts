@@ -7,6 +7,7 @@ plugins {
     id("org.openapi.generator") version "7.17.0"
     id("com.github.spotbugs") version "6.4.6"
     id("io.freefair.lombok") version "9.1.0"
+    id("com.google.cloud.tools.jib") version "3.5.1"
     application
 }
 
@@ -21,6 +22,15 @@ java {
 
 application {
     mainClass.set("com.payment.PaymentServiceApplication")
+}
+
+jib {
+    from {
+        image = "eclipse-temurin:21-jre-alpine"
+    }
+    to {
+        image = "payment-service"
+    }
 }
 
 repositories {
