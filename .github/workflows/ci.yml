@@ -11,6 +11,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      checks: write
+      pull-requests: write
 
     steps:
     - uses: actions/checkout@v4
@@ -32,6 +34,16 @@ jobs:
 
     - name: Run Checks
       run: ./gradlew check -x test
+
+    - name: Add coverage to PR
+      id: jacoco
+      uses: Madrapps/jacoco-report@v1.7.1
+      if: success() || failure()
+      with:
+        paths: ${{ github.workspace }}/build/reports/jacoco/test/jacocoTestReport.xml
+        token: ${{ secrets.GITHUB_TOKEN }}
+        min-coverage-overall: 80
+        min-coverage-changed-files: 80
       
     - name: Publish Test Report
       uses: mikepenz/action-junit-report@v4
