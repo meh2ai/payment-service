@@ -6,6 +6,7 @@ import jakarta.persistence.EntityListeners;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
+import jakarta.persistence.Version;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
@@ -48,6 +49,9 @@ public class Payment {
 
     @LastModifiedDate
     private Instant updatedAt;
+
+    @Version
+    private Long version;
 
     public static Payment create(
         String idempotencyKey, UUID senderAccountId, UUID receiverAccountId, BigDecimal amount, String currency) {

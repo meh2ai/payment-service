@@ -6,3 +6,6 @@ databaseChangeLog:
       file: changes/0002-test-data.sql
       relativeToChangelogFile: true
       context: local,test
+  - include:
+      file: changes/0003-add-payment-version.sql
+      relativeToChangelogFile: true

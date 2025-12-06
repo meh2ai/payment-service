@@ -70,8 +70,7 @@ public class PaymentService {
 
     @Transactional(readOnly = true)
     public PaymentResponse getPayment(UUID paymentId) {
-        Payment payment = paymentRepository.findById(paymentId)
-            .orElseThrow(() -> PaymentException.paymentNotFound(paymentId));
+        Payment payment = paymentRepository.findById(paymentId).orElseThrow(() -> PaymentException.paymentNotFound(paymentId));
         return toPaymentResponse(payment);
     }
 

@@ -33,8 +33,7 @@ public class AccountService {
 
     @Transactional(readOnly = true)
     public AccountResponse getAccount(UUID accountId) {
-        Account account = accountRepository.findById(accountId)
-            .orElseThrow(() -> PaymentException.accountNotFound(accountId));
+        Account account = accountRepository.findById(accountId).orElseThrow(() -> PaymentException.accountNotFound(accountId));
         return toAccountResponse(account);
     }
 

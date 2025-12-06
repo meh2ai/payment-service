@@ -78,7 +78,7 @@ public class PaymentProcessor {
             payment.markFailed(e.getErrorCode(), e.getMessage());
             paymentRepository.save(payment);
 
-            log.warn("Payment {} failed: {}", paymentId, e.getMessage());
+            log.error("Payment {} failed", paymentId, e);
 
             eventPublisher.publishEvent(PaymentCompletedEvent.failure(
                 payment.getId(),
