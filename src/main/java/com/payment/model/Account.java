@@ -1,6 +1,6 @@
 package com.payment.model;
 
-import com.payment.exception.PaymentException;
+import com.payment.exception.business.InsufficientBalanceException;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
 import jakarta.persistence.Id;
@@ -45,7 +45,7 @@ public class Account {
 
     public void debit(BigDecimal amount) {
         if (balance.compareTo(amount) < 0) {
-            throw PaymentException.insufficientBalance(id, balance, amount);
+            throw new InsufficientBalanceException(id, balance, amount);
         }
         this.balance = this.balance.subtract(amount);
     }

@@ -4,7 +4,7 @@ import com.payment.api.model.AccountRequest
 import com.payment.api.model.AccountResponse
 import com.payment.controller.AccountsApiController
 import com.payment.exception.ErrorCode
-import com.payment.exception.PaymentException
+import com.payment.exception.ResourceNotFoundException
 import com.payment.service.AccountService
 import org.springframework.http.HttpStatus
 import spock.lang.Specification
@@ -64,7 +64,7 @@ class AccountsApiControllerSpec extends Specification {
         response.body.currency == "EUR"
     }
 
-    def "should propagate PaymentException"() {
+    def "should propagate ResourceNotFoundException"() {
         given:
         def accountId = UUID.randomUUID()
 
@@ -73,11 +73,11 @@ class AccountsApiControllerSpec extends Specification {
 
         then:
         1 * accountService.getAccount(accountId) >> {
-            throw PaymentException.accountNotFound(accountId)
+            throw ResourceNotFoundException.accountNotFound(accountId)
         }
 
         and:
-        def ex = thrown(PaymentException)
+        def ex = thrown(ResourceNotFoundException)
         ex.errorCode == ErrorCode.ACCOUNT_NOT_FOUND
     }
 }
