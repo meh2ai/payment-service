@@ -2,7 +2,7 @@ package com.payment.service;
 
 import com.payment.api.model.AccountRequest;
 import com.payment.api.model.AccountResponse;
-import com.payment.exception.PaymentException;
+import com.payment.exception.ResourceNotFoundException;
 import com.payment.model.Account;
 import com.payment.repository.AccountRepository;
 import lombok.RequiredArgsConstructor;
@@ -33,7 +33,7 @@ public class AccountService {
 
     @Transactional(readOnly = true)
     public AccountResponse getAccount(UUID accountId) {
-        Account account = accountRepository.findById(accountId).orElseThrow(() -> PaymentException.accountNotFound(accountId));
+        Account account = accountRepository.findById(accountId).orElseThrow(() -> ResourceNotFoundException.accountNotFound(accountId));
         return toAccountResponse(account);
     }
 

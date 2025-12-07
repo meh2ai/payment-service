@@ -38,21 +38,15 @@ repositories {
 }
 
 val versions = mapOf(
-    "springModulith" to "1.4.5",
     "swagger" to "2.2.41",
     "spock" to "2.4-M7-groovy-4.0",
     "groovy" to "4.0.29",
     "testcontainers" to "1.21.3",
     "modelmapper" to "3.2.6",
     "lombok" to "1.18.42",
-    "awaitility" to "4.3.0"
+    "awaitility" to "4.3.0",
+    "temporal" to "1.32.1"
 )
-
-dependencyManagement {
-    imports {
-        mavenBom("org.springframework.modulith:spring-modulith-bom:${versions["springModulith"]}")
-    }
-}
 
 dependencies {
 
@@ -62,14 +56,12 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-actuator")
     implementation("org.springframework.kafka:spring-kafka")
 
-    implementation("org.springframework.modulith:spring-modulith-starter-core")
-    implementation("org.springframework.modulith:spring-modulith-starter-jpa")
-    implementation("org.springframework.modulith:spring-modulith-events-kafka")
-
     implementation("org.liquibase:liquibase-core")
     runtimeOnly("org.postgresql:postgresql")
 
     implementation("org.modelmapper:modelmapper:${versions["modelmapper"]}")
+
+    implementation("io.temporal:temporal-spring-boot-starter:${versions["temporal"]}")
 
     implementation("io.swagger.core.v3:swagger-annotations:${versions["swagger"]}")
     implementation("jakarta.validation:jakarta.validation-api")
@@ -78,11 +70,12 @@ dependencies {
     testImplementation("org.apache.groovy:groovy:${versions["groovy"]}")
     testImplementation("org.apache.groovy:groovy-json:${versions["groovy"]}")
 
+    testImplementation("io.temporal:temporal-testing:${versions["temporal"]}")
+
     testImplementation("org.spockframework:spock-core:${versions["spock"]}")
     testImplementation("org.spockframework:spock-spring:${versions["spock"]}")
 
     testImplementation("org.springframework.boot:spring-boot-starter-test")
-    testImplementation("org.springframework.modulith:spring-modulith-starter-test")
     testImplementation("org.springframework.kafka:spring-kafka-test")
     testImplementation("org.awaitility:awaitility:${versions["awaitility"]}")
     testImplementation("org.testcontainers:spock:${versions["testcontainers"]}")
@@ -133,9 +126,6 @@ tasks.withType<com.github.spotbugs.snom.SpotBugsTask>().configureEach {
 
 tasks.test {
     useJUnitPlatform()
-}
-
-tasks.test {
     finalizedBy(tasks.jacocoTestReport)
 }
 
@@ -148,7 +138,7 @@ val jacocoExcludedPatterns = listOf(
     "**/generated/**",
     "org/openapitools/**",
     "**/api/**",
-    "**/model/**",
+    "**/api/model/**",
     "**/*Application*.class"
 )
 tasks.jacocoTestReport {

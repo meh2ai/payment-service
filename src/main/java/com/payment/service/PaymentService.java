@@ -4,17 +4,20 @@ import com.payment.api.model.PaymentAcceptedResponse;
 import com.payment.api.model.PaymentListResponse;
 import com.payment.api.model.PaymentRequest;
 import com.payment.api.model.PaymentResponse;
-import com.payment.event.PaymentCreatedEvent;
-import com.payment.exception.PaymentException;
+import com.payment.config.TemporalConfig;
+import com.payment.exception.ResourceNotFoundException;
+import com.payment.exception.validation.PaymentValidationException;
 import com.payment.model.Payment;
 import com.payment.model.PaymentStatus;
 import com.payment.repository.AccountRepository;
 import com.payment.repository.PaymentRepository;
 import com.payment.repository.PaymentSpecification;
+import com.payment.temporal.workflow.PaymentWorkflow;
+import io.temporal.client.WorkflowClient;
+import io.temporal.client.WorkflowOptions;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -32,7 +35,7 @@ public class PaymentService {
 
     private final PaymentRepository paymentRepository;
     private final AccountRepository accountRepository;
-    private final ApplicationEventPublisher eventPublisher;
+    private final WorkflowClient workflowClient;
     private final ModelMapper modelMapper;
 
     @Transactional
@@ -57,20 +60,23 @@ public class PaymentService {
         paymentRepository.save(payment);
         log.info("Payment created: {}", payment.getId());
 
-        eventPublisher.publishEvent(new PaymentCreatedEvent(
-            payment.getId(),
-            payment.getSenderAccountId(),
-            payment.getReceiverAccountId(),
-            payment.getAmount(),
-            payment.getCurrency()
-        ));
+        // Start Temporal Workflow
+        PaymentWorkflow workflow = workflowClient.newWorkflowStub(
+            PaymentWorkflow.class,
+            WorkflowOptions.newBuilder()
+                .setTaskQueue(TemporalConfig.PAYMENT_TASK_QUEUE)
+                .setWorkflowId(payment.getId().toString())
+                .build()
+        );
+
+        WorkflowClient.start(workflow::processPayment, payment.getId());
 
         return toAcceptedResponse(payment);
     }
 
     @Transactional(readOnly = true)
     public PaymentResponse getPayment(UUID paymentId) {
-        Payment payment = paymentRepository.findById(paymentId).orElseThrow(() -> PaymentException.paymentNotFound(paymentId));
+        Payment payment = paymentRepository.findById(paymentId).orElseThrow(() -> ResourceNotFoundException.paymentNotFound(paymentId));
         return toPaymentResponse(payment);
     }
 
@@ -92,20 +98,20 @@ public class PaymentService {
 
     private void validatePaymentRequest(PaymentRequest request) {
         if (request.getSenderAccountId().equals(request.getReceiverAccountId())) {
-            throw PaymentException.sameAccount(request.getSenderAccountId());
+            throw PaymentValidationException.sameAccount(request.getSenderAccountId());
         }
 
         if (!accountRepository.existsById(request.getSenderAccountId())) {
-            throw PaymentException.senderAccountNotFound(request.getSenderAccountId());
+            throw ResourceNotFoundException.senderAccountNotFound(request.getSenderAccountId());
         }
 
         if (!accountRepository.existsById(request.getReceiverAccountId())) {
-            throw PaymentException.receiverAccountNotFound(request.getReceiverAccountId());
+            throw ResourceNotFoundException.receiverAccountNotFound(request.getReceiverAccountId());
         }
 
         BigDecimal amount = new BigDecimal(request.getAmount());
         if (amount.compareTo(BigDecimal.ZERO) <= 0) {
-            throw PaymentException.invalidAmount(amount);
+            throw PaymentValidationException.invalidAmount(amount);
         }
     }
 

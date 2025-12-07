@@ -1,0 +1,6 @@
+spring.temporal:
+  test-server:
+    enabled: true
+  workers-auto-discovery:
+    packages:
+      - com.payment.temporal

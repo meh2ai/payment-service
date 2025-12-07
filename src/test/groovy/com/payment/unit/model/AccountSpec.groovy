@@ -2,6 +2,7 @@ package com.payment.unit.model
 
 import com.payment.exception.ErrorCode
 import com.payment.exception.PaymentException
+import com.payment.exception.business.InsufficientBalanceException
 import com.payment.model.Account
 import spock.lang.Specification
 
@@ -53,7 +54,7 @@ class AccountSpec extends Specification {
         account.debit(new BigDecimal("100.00"))
 
         then:
-        def ex = thrown(PaymentException)
+        def ex = thrown(InsufficientBalanceException)
         ex.errorCode == ErrorCode.INSUFFICIENT_BALANCE
         ex.message.contains("50.00")
         ex.message.contains("100.00")

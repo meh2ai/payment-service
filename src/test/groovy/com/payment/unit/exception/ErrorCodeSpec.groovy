@@ -1,32 +1,31 @@
 package com.payment.unit.exception
 
 import com.payment.exception.ErrorCode
+import org.springframework.http.HttpStatus
 import spock.lang.Specification
 import spock.lang.Unroll
 
 class ErrorCodeSpec extends Specification {
 
     @Unroll
-    def "error code #errorCode should have numeric code #expectedNumericCode"() {
+    def "error code #errorCode should have numeric code #expectedNumericCode and HTTP status #expectedHttpStatus"() {
         expect:
         errorCode.numericCode == expectedNumericCode
-        errorCode.defaultMessage != null
-        !errorCode.defaultMessage.isEmpty()
+        errorCode.httpStatus == expectedHttpStatus
 
         where:
-        errorCode                          | expectedNumericCode
-        ErrorCode.PAYMENT_NOT_FOUND        | 1001
-        ErrorCode.DUPLICATE_PAYMENT        | 1002
-        ErrorCode.PAYMENT_PROCESSING_FAILED| 1003
-        ErrorCode.ACCOUNT_NOT_FOUND        | 2001
-        ErrorCode.SENDER_ACCOUNT_NOT_FOUND | 2002
-        ErrorCode.RECEIVER_ACCOUNT_NOT_FOUND | 2003
-        ErrorCode.INSUFFICIENT_BALANCE     | 2004
-        ErrorCode.VALIDATION_ERROR         | 3001
-        ErrorCode.INVALID_AMOUNT           | 3002
-        ErrorCode.INVALID_CURRENCY         | 3003
-        ErrorCode.INTERNAL_ERROR           | 5001
-        ErrorCode.SERVICE_UNAVAILABLE      | 5002
+        errorCode                            | expectedNumericCode | expectedHttpStatus
+        ErrorCode.PAYMENT_NOT_FOUND          | 1001                | HttpStatus.NOT_FOUND
+        ErrorCode.DUPLICATE_PAYMENT          | 1002                | HttpStatus.CONFLICT
+        ErrorCode.PAYMENT_PROCESSING_FAILED  | 1003                | HttpStatus.UNPROCESSABLE_ENTITY
+        ErrorCode.ACCOUNT_NOT_FOUND          | 2001                | HttpStatus.NOT_FOUND
+        ErrorCode.SENDER_ACCOUNT_NOT_FOUND   | 2002                | HttpStatus.NOT_FOUND
+        ErrorCode.RECEIVER_ACCOUNT_NOT_FOUND | 2003                | HttpStatus.NOT_FOUND
+        ErrorCode.INSUFFICIENT_BALANCE       | 2004                | HttpStatus.UNPROCESSABLE_ENTITY
+        ErrorCode.SAME_ACCOUNT               | 2005                | HttpStatus.BAD_REQUEST
+        ErrorCode.VALIDATION_ERROR           | 3001                | HttpStatus.BAD_REQUEST
+        ErrorCode.INVALID_AMOUNT             | 3002                | HttpStatus.BAD_REQUEST
+        ErrorCode.INTERNAL_ERROR             | 5001                | HttpStatus.INTERNAL_SERVER_ERROR
     }
 
     def "payment error codes should be in 1xxx range"() {

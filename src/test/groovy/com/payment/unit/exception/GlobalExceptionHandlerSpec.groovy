@@ -3,6 +3,7 @@ package com.payment.unit.exception
 import com.payment.exception.ErrorCode
 import com.payment.exception.GlobalExceptionHandler
 import com.payment.exception.PaymentException
+import com.payment.exception.ResourceNotFoundException
 import jakarta.servlet.http.HttpServletRequest
 import org.springframework.http.HttpStatus
 import org.springframework.validation.BindingResult
@@ -24,7 +25,7 @@ class GlobalExceptionHandlerSpec extends Specification {
     }
 
     @Unroll
-    def "should map #errorCode to HTTP #expectedStatus"() {
+    def "should map PaymentException with #errorCode to HTTP #expectedStatus"() {
         given:
         def exception = new PaymentException(errorCode, "Test message")
 
@@ -39,22 +40,39 @@ class GlobalExceptionHandlerSpec extends Specification {
 
         where:
         errorCode                            | expectedStatus
-        ErrorCode.PAYMENT_NOT_FOUND          | HttpStatus.NOT_FOUND
-        ErrorCode.ACCOUNT_NOT_FOUND          | HttpStatus.NOT_FOUND
-        ErrorCode.SENDER_ACCOUNT_NOT_FOUND   | HttpStatus.NOT_FOUND
-        ErrorCode.RECEIVER_ACCOUNT_NOT_FOUND | HttpStatus.NOT_FOUND
-        ErrorCode.INSUFFICIENT_BALANCE       | HttpStatus.UNPROCESSABLE_ENTITY
         ErrorCode.DUPLICATE_PAYMENT          | HttpStatus.CONFLICT
-        ErrorCode.VALIDATION_ERROR           | HttpStatus.BAD_REQUEST
-        ErrorCode.INTERNAL_ERROR             | HttpStatus.INTERNAL_SERVER_ERROR
+        ErrorCode.PAYMENT_PROCESSING_FAILED  | HttpStatus.UNPROCESSABLE_ENTITY
     }
 
-    def "should handle PaymentException with all fields populated"() {
+    @Unroll
+    def "should map ResourceNotFoundException with #errorCode to HTTP NOT_FOUND"() {
         given:
-        def exception = PaymentException.paymentNotFound(UUID.randomUUID())
+        def exception = new ResourceNotFoundException(errorCode, "Test message")
 
         when:
-        def response = handler.handlePaymentException(exception, request)
+        def response = handler.handleResourceNotFoundException(exception, request)
+
+        then:
+        response.statusCode == HttpStatus.NOT_FOUND
+        response.body.errorCode == errorCode.name()
+        response.body.numericCode == errorCode.numericCode
+        response.body.message == "Test message"
+
+        where:
+        errorCode << [
+            ErrorCode.PAYMENT_NOT_FOUND,
+            ErrorCode.ACCOUNT_NOT_FOUND,
+            ErrorCode.SENDER_ACCOUNT_NOT_FOUND,
+            ErrorCode.RECEIVER_ACCOUNT_NOT_FOUND
+        ]
+    }
+
+    def "should handle ResourceNotFoundException with all fields populated"() {
+        given:
+        def exception = ResourceNotFoundException.paymentNotFound(UUID.randomUUID())
+
+        when:
+        def response = handler.handleResourceNotFoundException(exception, request)
 
         then:
         response.statusCode == HttpStatus.NOT_FOUND

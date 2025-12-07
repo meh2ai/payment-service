@@ -2,7 +2,7 @@ package com.payment.unit.service
 
 import com.payment.api.model.AccountRequest
 import com.payment.exception.ErrorCode
-import com.payment.exception.PaymentException
+import com.payment.exception.ResourceNotFoundException
 import com.payment.model.Account
 import com.payment.repository.AccountRepository
 import com.payment.service.AccountService
@@ -81,7 +81,7 @@ class AccountServiceSpec extends Specification {
         response.currency == "EUR"
     }
 
-    def "should throw PaymentException for non-existent account"() {
+    def "should throw ResourceNotFoundException for non-existent account"() {
         given:
         def accountId = UUID.randomUUID()
 
@@ -92,7 +92,7 @@ class AccountServiceSpec extends Specification {
         1 * accountRepository.findById(accountId) >> Optional.empty()
 
         and:
-        def ex = thrown(PaymentException)
+        def ex = thrown(ResourceNotFoundException)
         ex.errorCode == ErrorCode.ACCOUNT_NOT_FOUND
     }
 }

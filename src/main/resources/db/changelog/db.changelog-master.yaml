@@ -9,3 +9,6 @@ databaseChangeLog:
   - include:
       file: changes/0003-add-payment-version.sql
       relativeToChangelogFile: true
+  - include:
+      file: changes/0004-remove-event-publication.sql
+      relativeToChangelogFile: true
